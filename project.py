@@ -144,104 +144,51 @@ def record_route(route):
     route = ', '.join(map(str, route))
     vis[route] = 1
     return
-# 遺傳算法的主要邏輯
-def genetic_algorithm(cities, pop_size=10, generations=10, mutation_rate=0.01):
-    num_cities = len(cities)
-    # population = init_arr
-    population = initialize_population(pop_size, pop_size=pop_size , num_cities=num_cities)
-    with Pool(processes=cpu_count()) as pool:
-        population = pool.map(close_route, population)
-    best_fitness_history = []
-    avg_fitness_history = []
-    for gen in range(generations):
-        gen+=1
-        fitness_values = evaluate_population(population, cities)
-        best_fitness = min(fitness_values)
-        avg_fitness = sum(fitness_values) / len(fitness_values)
-        best_fitness_history.append(best_fitness)
-        avg_fitness_history.append(avg_fitness)
 
-        parents = select_parents(population, cities)
+def genetic_algorithm(cities, pop_size=10, generations=10, mutation_rate=0.01):
+    num_cities = len(cities)  # 獲取城市的數量
+    population = initialize_population(pop_size, pop_size=pop_size, num_cities=num_cities)  # 初始化種群
+    with Pool(processes=cpu_count()) as pool:
+        population = pool.map(close_route, population)  # 使用多處理優化種群中的路線
+    best_fitness_history = []  # 紀錄每一代的最佳適應度值
+    avg_fitness_history = []   # 紀錄每一代的平均適應度值
+
+    for gen in range(generations):
+        print(f'gen = {gen}')
+        gen += 1  # 更新代數
+        fitness_values = evaluate_population(population, cities)  # 評估當前種群中每條路線的適應度
+        best_fitness = min(fitness_values)  # 獲取最佳適應度（最短距離）
+        avg_fitness = sum(fitness_values) / len(fitness_values)  # 計算平均適應度
+        best_fitness_history.append(best_fitness)  # 將最佳適應度加入歷史紀錄
+        avg_fitness_history.append(avg_fitness)    # 將平均適應度加入歷史紀錄
+
+        parents = select_parents(population, cities)  # 選擇父代進行交配
         # 使用多處理生成子代
         with Pool(processes=cpu_count()) as pool:
-            new_population = parents + pool.map(generate_child, [(random.choice(parents), random.choice(parents), mutation_rate, cities) for _ in range(pop_size - len(parents))])
-        population = new_population
+            new_population = parents + pool.map(
+                generate_child,
+                [
+                    (
+                        random.choice(parents),    # 隨機選擇父本
+                        random.choice(parents),    # 隨機選擇母本
+                        mutation_rate,             # 突變率
+                        cities                     # 城市列表
+                    ) for _ in range(pop_size - len(parents))
+                ]
+            )
+        population = new_population  # 更新種群為新一代
 
-    best_route = min(population, key=lambda x: fitness(x, cities))
+    best_route = min(population, key=lambda x: fitness(x, cities))  # 從最終種群中獲取最佳路線
     return best_route, fitness(best_route, cities), best_fitness_history, avg_fitness_history
 
 def evaluate_population(population, cities):
     with Pool() as pool:
-        fitness_values = pool.starmap(fitness, [(route, cities) for route in population])
+        fitness_values = pool.starmap(fitness, [(route, cities) for route in population])  # 計算每條路線的適應度
     return fitness_values
 
-
 def main():
-    # greedy_ans = greedy_algorithm(cities , 0)
-    # init_arr.append(greedy_ans[0])
-    # for i in range(len(cities)):
-    #     now = greedy_algorithm(cities=cities ,i=i)
-    #     init_arr.append(now[0])
-    #     if now[1] < greedy_ans[1]:
-    #         greedy_ans = now
-    # print(greedy_ans)
-
-
-    pop = 1000
-    gen = 100
-    mutate = 0.01
-    sz = 2
-    start_time = time.time()
-    best_route, best_distance, best_fitness_history, avg_fitness_history = genetic_algorithm(pop_size=pop , generations=gen , mutation_rate=mutate ,cities=cities)
-    end_time = time.time()
-    print(f"Best Route: {best_route}")
-    print(f"Total Distance: {best_distance}")
-    tim = end_time - start_time
-    hour = tim // 60 // 60
-    minute = (tim - hour * 60 * 60) // 60
-    sec = tim - (minute * 60) - (hour * 60 * 60)
-    print(f'execute time: {hour} h {minute} m {sec} sec')
-    plt.plot(range(len(best_fitness_history)), best_fitness_history, label=f"{sz}parent_{pop}pop_{gen}gen_{mutate}mutationRate" ,color='green')
-
-
-    sz = 20
-    start_time = time.time()
-    best_route, best_distance, best_fitness_history, avg_fitness_history = genetic_algorithm(pop_size=pop , generations=gen , mutation_rate=mutate, cities=cities)
-    end_time = time.time()
-    print(f"Best Route: {best_route}")
-    print(f"Total Distance: {best_distance}")
-    tim = end_time - start_time
-    hour = tim // 60 // 60
-    minute = (tim - hour * 60 * 60) // 60
-    sec = tim - (minute * 60) - (hour * 60 * 60)
-    print(f'execute time: {hour} h {minute} m {sec} sec')
-    plt.plot(range(len(best_fitness_history)), best_fitness_history, label=f"{sz}parent_{pop}pop_{gen}gen_{mutate}mutationRate" ,color='blue')
-
-
-    sz = 200
-    start_time = time.time()
-    best_route, best_distance, best_fitness_history, avg_fitness_history = genetic_algorithm(pop_size=pop , generations=gen , mutation_rate=mutate ,cities=cities)
-    end_time = time.time()
-    print(f"Best Route: {best_route}")
-    print(f"Total Distance: {best_distance}")
-    tim = end_time - start_time
-    hour = tim // 60 // 60
-    minute = (tim - hour * 60 * 60) // 60
-    sec = tim - (minute * 60) - (hour * 60 * 60)
-    print(f'execute time: {hour} h {minute} m {sec} sec')
-
-
-
-    # 顯示最終的進化圖表
-    plt.ioff()
-    plt.plot(range(len(best_fitness_history)), best_fitness_history, label=f"{sz}parent_{pop}pop_{gen}gen_{mutate}mutationRate" ,color='red')
-    plt.title('Fitness Progression in Genetic Algorithm')
-    plt.xlabel('Generation')
-    plt.ylabel('Route Distance')
-    # plt.ylim(0, 550)  # 設定 y 軸範圍
-    plt.legend()
-    plt.savefig('population.png')  # 保存圖表並設置背景透明
-    plt.show()
+    # 主函數入口
+    pass  # 這裡可以填入您的主程式碼
 
 if __name__ == "__main__":
     main()
