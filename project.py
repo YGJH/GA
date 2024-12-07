@@ -124,7 +124,8 @@ def generate_child(args):
     now = ', '.join(map(str, child))
     while now in vis:
         # 如果child已經存在，重新生成
-        random.shuffle(child[0 , -1])
+        child = range(len(cities))
+        random.shuffle(child)
         # child = mutate(crossover(parent1, parent2), mutation_rate)
         child.append(child[0])
         now = ', '.join(map(str, child))
