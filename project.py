@@ -124,7 +124,7 @@ def generate_child(args):
     now = ', '.join(map(str, child))
     while now in vis:
         # 如果child已經存在，重新生成
-        child = range(len(cities))
+        child = list(range(len(cities)))
         random.shuffle(child)
         # child = mutate(crossover(parent1, parent2), mutation_rate)
         child.append(child[0])
@@ -205,7 +205,7 @@ def main():
     # print(greedy_ans)
     pop = 500
     gen = 100
-    mutate = 0.001
+    mutate = 0
 
     start_time = time.time()
     best_route, best_distance, best_fitness_history, avg_fitness_history = genetic_algorithm(pop_size=pop , generations=gen , mutation_rate=mutate ,cities=cities)
