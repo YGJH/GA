@@ -2,7 +2,7 @@ from multiprocessing import Pool, cpu_count
 import random
 import math
 import csv
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import functools
 import time
 vis = dict()
@@ -25,6 +25,8 @@ def crossover(parent1, parent2, cities=cities):
     vis = [0 for _ in range(len(parent1))]
     p, q = 0, 0
     child = []
+    parent1 = parent1[:-1]
+    parent2 = parent2[:-1]
     child.append(random.randint(0, len(cities) - 1))
     vis[child[0]] = 1
     while len(child) < len(parent1) and p < len(parent1) and q < len(parent2):
@@ -65,11 +67,13 @@ def crossover(parent1, parent2, cities=cities):
 #     child = parent1[:len(parent1) // 2]
 #     child += [gene for gene in parent2 if gene not in child]
 #     return child
+greedy_ans = []
 # 貪婪算法
 def greedy_algorithm(cities , i):
     visited = [i]  # 從第一個城市開始
-    unvisited = list(range(0, len(cities)))
-    unvisited[i] = 0
+    # unvisited = list(range(0, len(cities)))
+    unvisited = [j for j in range(len(cities))]
+    unvisited.remove(i)
     current_city = i
     total_distance = 0
 
@@ -148,39 +152,20 @@ def record_route(route):
 # 遺傳算法的主要邏輯
 def genetic_algorithm(cities, pop_size=10, generations=10, mutation_rate=0.01):
     num_cities = len(cities)
-    # population = init_arr
     population = initialize_population(pop_size, pop_size=pop_size , num_cities=num_cities)
     with Pool(processes=cpu_count()) as pool:
         population = pool.map(close_route, population)
-        # pool.map(record_route, population)
-    # print(population)
-    # return None
     best_fitness_history = []
     avg_fitness_history = []
-    # plt.ion()
-    # fig, ax = plt.subplots(figsize=(10, 6))
-    # ax.set_xlabel('Generation')
-    # ax.set_ylabel('Route Distance')
-    # ax.set_title('Fitness Progression in Genetic Algorithm')
-
     for gen in range(generations):
         print(f'gen = {gen}')
-        gen+=1
         fitness_values = evaluate_population(population, cities)
         best_fitness = min(fitness_values)
         avg_fitness = sum(fitness_values) / len(fitness_values)
         best_fitness_history.append(best_fitness)
         avg_fitness_history.append(avg_fitness)
 
-        # 更新圖表
-        # ax.clear()
-        # ax.plot(range(gen + 1), best_fitness_history, label='Best Fitness', color='blue')
-        # ax.plot(range(gen + 1), avg_fitness_history, label='Average Fitness', color='red')
-        # ax.legend()
-        # plt.pause(0.001)
-
         parents = select_parents(population, cities)
-        # 使用多處理生成子代
         with Pool(processes=cpu_count()) as pool:
             new_population = parents + pool.map(generate_child, [(random.choice(parents), random.choice(parents), mutation_rate, cities) for _ in range(pop_size - len(parents))])
         population = new_population
@@ -195,6 +180,8 @@ def evaluate_population(population, cities):
 
 
 def main():
+    with Pool(processes=cpu_count()) as pool:
+        init_arr = pool.starmap(greedy_algorithm, [(cities , i) for i in range(len(cities))])
     # greedy_ans = greedy_algorithm(cities , 0)
     # init_arr.append(greedy_ans[0])
     # for i in range(len(cities)):
@@ -202,9 +189,12 @@ def main():
     #     init_arr.append(now[0])
     #     if now[1] < greedy_ans[1]:
     #         greedy_ans = now
-    # print(greedy_ans)
-    pop = 500
-    gen = 100
+    greedy_ans = min(init_arr , key=lambda x: x[1])
+    print(greedy_ans)
+
+
+    pop = 1000
+    gen = 10
     mutate = 0
 
     start_time = time.time()
@@ -220,7 +210,7 @@ def main():
     plt.plot(range(len(best_fitness_history)), best_fitness_history, label=f"{sz}parent_{pop}pop_{gen}gen_{mutate}mutationRate" ,color='green')
 
 
-    pop = 1000
+    mutate = 0.01
     start_time = time.time()
     best_route, best_distance, best_fitness_history, avg_fitness_history = genetic_algorithm(pop_size=pop , generations=gen , mutation_rate=mutate, cities=cities)
     end_time = time.time()
@@ -233,7 +223,7 @@ def main():
     print(f'execute time: {hour} h {minute} m {sec} sec')
     plt.plot(range(len(best_fitness_history)), best_fitness_history, label=f"{sz}parent_{pop}pop_{gen}gen_{mutate}mutationRate" ,color='blue')
 
-    pop = 1500
+    mutate = 0.1
     start_time = time.time()
     best_route, best_distance, best_fitness_history, avg_fitness_history = genetic_algorithm(pop_size=pop , generations=gen , mutation_rate=mutate ,cities=cities)
     print(f"Best Route: {best_route}")
