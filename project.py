@@ -182,13 +182,7 @@ def evaluate_population(population, cities):
 def main():
     with Pool(processes=cpu_count()) as pool:
         init_arr = pool.starmap(greedy_algorithm, [(cities , i) for i in range(len(cities))])
-    # greedy_ans = greedy_algorithm(cities , 0)
-    # init_arr.append(greedy_ans[0])
-    # for i in range(len(cities)):
-    #     now = greedy_algorithm(cities=cities ,i=i)
-    #     init_arr.append(now[0])
-    #     if now[1] < greedy_ans[1]:
-    #         greedy_ans = now
+
     greedy_ans = min(init_arr , key=lambda x: x[1])
     print(greedy_ans)
  
