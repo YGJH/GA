@@ -191,7 +191,7 @@ def main():
     #         greedy_ans = now
     greedy_ans = min(init_arr , key=lambda x: x[1])
     print(greedy_ans)
-
+ 
 
     pop = 1000
     gen = 10
